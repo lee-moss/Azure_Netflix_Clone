@@ -8,6 +8,7 @@ This project aims to deploy a Netflix clone application using modern DevOps prac
 
 - Azure
 - Bicep
+- Powershell
 - Jenkins
 - Docker
 - Kubernetes
