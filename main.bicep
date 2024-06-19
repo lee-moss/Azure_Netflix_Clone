@@ -1,7 +1,12 @@
-param networkSecurityGroupName string = 'myNSG'
-param virtualNetworkName string = 'Netflix_Vnet'
-param subnetName string = 'subnet'
-param location string = 'UkWest'
+param networkSecurityGroupName string 
+param virtualNetworkName string
+param subnetName string
+param location string 
+param adminLogin string
+param computerName string
+
+@secure()
+param adminPassword string
 
 resource Vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: virtualNetworkName
@@ -71,14 +76,15 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: Vnet.properties.subnets[0].id
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'Netflix_Vnet', 'subnet')
           }
-          privateIPAllocationMethod: 'Dynamic'
-        }
-      }
-    ]
+          }
+            // privateIPAllocationMethod: 'Dynamic'
+         }
+     ]
   }
 }
+
     
 // #############################################################################
 // VIRTUAL MACHINE
@@ -103,13 +109,17 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
         createOption: 'FromImage'
       }
     }
+      osProfile: {
+        computerName: computerName
+        adminPassword: adminPassword
+        adminUsername: adminLogin
+    }
       networkProfile: {
         networkInterfaces: [
           {
-            id: 'Netflix_VM-nic'
+            id: resourceId('Microsoft.Network/networkInterfaces', 'Netflix_VM-nic')
           }
         ]
       }
     }
   }
-
