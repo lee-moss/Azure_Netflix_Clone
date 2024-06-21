@@ -1,14 +1,61 @@
-param networkSecurityGroupName string 
+param networkSecurityGroupName string
 param virtualNetworkName string
 param subnetName string
 param location string 
 param adminLogin string
 param computerName string
+param networkSecurityGroupRules array
+param publicIpAddressName string
+param publicIpAddressType string
+param publicIpAddressSku string
+param virtualMachineName string
+
 
 @secure()
 param adminPassword string
 
-resource Vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
+var vnetId    = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', virtualNetworkName)
+var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', vnetId, subnetName)
+
+
+
+// #############################################################################
+// NETWORK INTERFACE CARD
+// #############################################################################
+
+resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
+  name: 'Netflix_VM-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: subnetRef
+          }
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: PiP.id
+          }
+        }
+      }
+    ]
+    networkSecurityGroup: {
+      id: nsgId
+    }
+  }
+  dependsOn: [
+    networkSecurityGroupName_resource
+    virtualNetworkName_resource
+  ]
+}
+// #############################################################################
+// VIRTUAL NETWORK
+// #############################################################################
+
+resource virtualNetworkName_resource'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: virtualNetworkName
   location: location
   properties: {
@@ -32,66 +79,35 @@ resource Vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
 // NETWORK SECURITY GROUP
 // #############################################################################
 
-resource NSG 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   name: networkSecurityGroupName
   location: location
   properties: {
-    securityRules: [
-      {
-        name: 'Allow-HTTP'
-        properties: {
-          priority: 1000
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '80'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-      {
-        name: 'Allow-HTTPS'
-        properties: {
-          priority: 1001
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
+    securityRules: networkSecurityGroupRules
   }
 }
 
-resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: 'Netflix_VM-nic'
-  location: location
+// #############################################################################
+// PUBLIC IP
+// #############################################################################
+
+resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
+   name : publicIpAddressName
+   location: location
   properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', 'Netflix_Vnet', 'subnet')
-          }
-          }
-            // privateIPAllocationMethod: 'Dynamic'
-         }
-     ]
+    publicIPAllocationMethod: publicIpAddressType
+  }
+  sku: {
+    name: publicIpAddressSku
   }
 }
-
     
 // #############################################################################
 // VIRTUAL MACHINE
 // #############################################################################
 
 resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'Netflix_VM'
+  name: virtualMachineName
   location: location
   properties: {
     hardwareProfile: {
