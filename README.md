@@ -2,6 +2,8 @@
 
 ## Overview
 
+<b><ins>This project is still under development and I will update my code frequently.</ins></b>
+
 This project aims to deploy a Netflix clone application using modern DevOps practices and tools. I will utilise Azure for cloud infrastructure, Bicep for infrastructure as code, Jenkins for continuous integration and continuous deployment (CI/CD), Docker for containerisation, and Kubernetes for container orchestration. Additionally, I will monitor Jenkins and Kubernetes metrics using Grafana, Prometheus, and Node exporter.
 
 ### Key Technologies and Tools
