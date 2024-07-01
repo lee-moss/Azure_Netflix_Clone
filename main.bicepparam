@@ -8,7 +8,11 @@ param computerName             = ''
 param virtualMachineName       = ''
 
 param adminLogin               = ''
+param keyVaultName             = 'Your-keyvault'
 param adminPassword            = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'adminLogin')
+param sshPublicKey             = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'sshPublicKey')
+
+param customScriptExtensionName  = 'installJenkins'
 
 param networkSecurityGroupRules = [
   {
@@ -17,7 +21,7 @@ param networkSecurityGroupRules = [
       priority: 1020
       direction: 'Inbound'
       access: 'Allow'
-      protocol: 'Tcp'
+      protocol: 'TCP'
       sourcePortRange: '*'
       destinationPortRange: '80'
       sourceAddressPrefix: '*'
@@ -30,11 +34,26 @@ param networkSecurityGroupRules = [
       priority: 1030
       direction: 'Inbound'
       access: 'Allow'
-      protocol: 'Tcp'
+      protocol: 'TCP'
       sourcePortRange: '*'
       destinationPortRange: '443'
       sourceAddressPrefix: '*'
       destinationAddressPrefix: '*'
+    }
+  }
+  {
+    name: 'SSH'
+    properties: {
+      priority: 1031
+      protocol: 'TCP'
+      access: 'Allow'
+      direction: 'Inbound'
+      sourceApplicationSecurityGroups: []
+      destinationApplicationSecurityGroups: []
+      sourceAddressPrefix: '*'
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '22'
     }
   }
 ]
