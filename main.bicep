@@ -1,9 +1,82 @@
-param networkSecurityGroupName string = 'myNSG'
-param virtualNetworkName string = 'Netflix_Vnet'
-param subnetName string = 'subnet'
-param location string = 'UkWest'
+param networkSecurityGroupName string
+param virtualNetworkName string
+param subnetName string
+param location string 
+param computerName string
+param networkSecurityGroupRules array
+param publicIpAddressName string
+param publicIpAddressType string
+param publicIpAddressSku string
+param virtualMachineName string
+param keyVaultName string
+param customScriptExtensionName string
 
-resource Vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+param adminLogin string
+@secure()
+param adminPassword string
+@secure()
+param sshPublicKey string
+
+var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
+var vnetId    = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', virtualNetworkName)
+var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', vnetId, subnetName)
+
+
+
+
+
+// #############################################################################
+// KEY VAULT & SSH PUBLIC KEY
+// #############################################################################
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: keyVaultName
+}
+
+resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2024-03-01' = {
+  name: '${virtualNetworkName}--sshPublicKeys'
+  location: location
+  properties: {
+    publicKey: reference('${keyVault.id}/secrets/${sshPublicKey}').value
+  }
+}
+
+// #############################################################################
+// NETWORK INTERFACE CARD
+// #############################################################################
+
+resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
+  name: 'Netflix_VM-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: subnetRef
+          }
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: PiP.id
+          }
+        }
+      }
+    ]
+    networkSecurityGroup: {
+      id: nsgId
+    }
+  }
+  dependsOn: [
+    networkSecurityGroupName_resource
+    virtualNetworkName_resource
+  ]
+}
+// #############################################################################
+// VIRTUAL NETWORK
+// #############################################################################
+
+resource virtualNetworkName_resource'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: virtualNetworkName
   location: location
   properties: {
@@ -27,56 +100,26 @@ resource Vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
 // NETWORK SECURITY GROUP
 // #############################################################################
 
-resource NSG 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   name: networkSecurityGroupName
   location: location
   properties: {
-    securityRules: [
-      {
-        name: 'Allow-HTTP'
-        properties: {
-          priority: 1000
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '80'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-      {
-        name: 'Allow-HTTPS'
-        properties: {
-          priority: 1001
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '443'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
+    securityRules: networkSecurityGroupRules
   }
 }
 
-resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: 'Netflix_VM-nic'
-  location: location
+// #############################################################################
+// PUBLIC IP
+// #############################################################################
+
+resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
+   name : publicIpAddressName
+   location: location
   properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: Vnet.properties.subnets[0].id
-          }
-          privateIPAllocationMethod: 'Dynamic'
-        }
-      }
-    ]
+    publicIPAllocationMethod: publicIpAddressType
+  }
+  sku: {
+    name: publicIpAddressSku
   }
 }
     
@@ -85,7 +128,7 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
 // #############################################################################
 
 resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: 'Netflix_VM'
+  name: virtualMachineName
   location: location
   properties: {
     hardwareProfile: {
@@ -94,22 +137,57 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 
     storageProfile: {
       imageReference: {
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
-      }
+        // publisher: 'Canonical'
+        // offer: 'UbuntuServer'
+        // sku: '18.04-LTS'
+        // version: 'latest'
+          publisher: 'bitnami'
+          offer: 'jenkins'
+          sku: '1-650'
+          version: 'latest'
+        }
       osDisk: {
         createOption: 'FromImage'
       }
     }
+      osProfile: {
+        computerName: computerName
+        adminPassword: adminPassword
+        adminUsername: adminLogin
+        linuxConfiguration: {
+          disablePasswordAuthentication: true
+          ssh: {
+            publicKeys: [
+              {
+                path: '/home/${adminLogin}/.ssh/authorized_keys'
+                keyData: sshPublicKeys.properties.publicKey
+              }
+            ]
+          }        }
+      }
       networkProfile: {
         networkInterfaces: [
           {
-            id: 'Netflix_VM-nic'
+            id: resourceId('Microsoft.Network/networkInterfaces', 'Netflix_VM-nic')
           }
         ]
       }
     }
   }
 
+  resource jenkins_docker_script 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
+    name: customScriptExtensionName 
+      location: location
+        properties: {
+          publisher: 'Microsoft.Compute'
+          type: 'CustomScriptExtension'
+          typeHandlerVersion: '1.10'
+          autoUpgradeMinorVersion: true
+          settings: {
+            fileUris: [
+              'https://dev.azure.com/LAM5/NetFlix/_git/NetFlix/?path=/script.ps1&version=GBmain&_a=contents'
+        ]
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup-jenkins-docker.ps1'
+    }
+  }
+}
