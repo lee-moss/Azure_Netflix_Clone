@@ -20,7 +20,6 @@ param sshPublicKey string
 var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
 var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
 
-
 // #############################################################################
 // KEY VAULT & SSH PUBLIC KEY
 // #############################################################################
@@ -73,7 +72,7 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
 // VIRTUAL NETWORK
 // #############################################################################
 
-resource virtualNetworkName_resource'Microsoft.Network/virtualNetworks@2023-11-01' = {
+resource virtualNetworkName_resource 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: virtualNetworkName
   location: location
   properties: {
@@ -110,8 +109,8 @@ resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGro
 // #############################################################################
 
 resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-   name : publicIpAddressName
-   location: location
+  name: publicIpAddressName
+  location: location
   properties: {
     publicIPAllocationMethod: publicIpAddressType
   }
@@ -138,53 +137,54 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
         // offer: 'UbuntuServer'
         // sku: '18.04-LTS'
         // version: 'latest'
-          publisher: 'bitnami'
-          offer: 'jenkins'
-          sku: '1-650'
-          version: 'latest'
-        }
+        publisher: 'bitnami'
+        offer: 'jenkins'
+        sku: '1-650'
+        version: 'latest'
+      }
       osDisk: {
         createOption: 'FromImage'
       }
     }
-      osProfile: {
-        computerName: computerName
-        adminPassword: adminPassword
-        adminUsername: adminLogin
-        linuxConfiguration: {
-          disablePasswordAuthentication: true
-          ssh: {
-            publicKeys: [
-              {
-                path: '/home/${adminLogin}/.ssh/authorized_keys'
-                keyData: sshPublicKeys.properties.publicKey
-              }
-            ]
-          }        }
-      }
-      networkProfile: {
-        networkInterfaces: [
-          {
-            id: resourceId('Microsoft.Network/networkInterfaces', 'Netflix_VM-nic')
-          }
-        ]
+    osProfile: {
+      computerName: computerName
+      adminPassword: adminPassword
+      adminUsername: adminLogin
+      linuxConfiguration: {
+        disablePasswordAuthentication: true
+        ssh: {
+          publicKeys: [
+            {
+              path: '/home/${adminLogin}/.ssh/authorized_keys'
+              keyData: sshPublicKeys.properties.publicKey
+            }
+          ]
+        }
       }
     }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: resourceId('Microsoft.Network/networkInterfaces', 'Netflix_VM-nic')
+        }
+      ]
+    }
   }
+}
 
-  resource jenkins_docker_script 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
-    name: customScriptExtensionName
-    parent: Virtual_Machine
-      location: location
-        properties: {
-          publisher: 'Microsoft.Compute'
-          type: 'CustomScriptExtension'
-          typeHandlerVersion: '1.10'
-          autoUpgradeMinorVersion: true
-          settings: {
-            fileUris: [
-              'https://dev.azure.com/LAM5/NetFlix/_git/NetFlix/?path=/script.ps1&version=GBmain&_a=contents'
-        ]
+resource jenkins_docker_script 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
+  name: customScriptExtensionName
+  parent: Virtual_Machine
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    settings: {
+      fileUris: [
+        'https://dev.azure.com/LAM5/NetFlix/_git/NetFlix/?path=/script.ps1&version=GBmain&_a=contents'
+      ]
       commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup-jenkins-docker.ps1'
     }
   }
