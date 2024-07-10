@@ -35,9 +35,9 @@ $dockerDaemonConfig = @"
   "hosts": ["fd://","tcp://127.0.0.1:2375"]
 }
 "@
-New-Item -Path /etc/systemd/system/docker.service.d -ItemType Directory -Force
-Set-Content -Path /etc/systemd/system/docker.service.d/docker.conf -Value $dockerServiceConfig
-Set-Content -Path /etc/docker/daemon.json -Value $dockerDaemonConfig
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "mkdir -p /etc/systemd/system/docker.service.d"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash -c 'echo $dockerServiceConfig | tee /etc/systemd/system/docker.service.d/docker.conf'"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash -c 'echo $dockerDaemonConfig | tee /etc/docker/daemon.json'"
 
 # Add 'azureuser' and 'jenkins' to the 'docker' group
 Write-Host "Adding users to Docker group..."
