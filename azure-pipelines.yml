@@ -7,11 +7,24 @@ trigger: none
 
 pool:
   vmImage: ubuntu-latest
+  
+variables:
+   azureSubscription: 'Azure subscription 1'
+   keyVaultName: 'NetflixSecret'
 
 jobs: 
   - job: Deploy
     steps:
+    
     - pwsh: ./script.ps1
+    
+    - task: AzureKeyVault@2
+      inputs:
+        azureSubscription: 'Netflix'
+        KeyVaultName: 'NetflixSecret'
+        SecretsFilter: '*'
+        RunAsPreJob: true
+
     - task: AzureResourceManagerTemplateDeployment@3
       inputs:
         deploymentScope: 'Resource Group'
