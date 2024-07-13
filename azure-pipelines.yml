@@ -26,7 +26,7 @@ jobs:
         subscriptionId: 488dbdc5-85c6-402d-811f-eb47d17f391f
         action: 'Create Or Update Resource Group'
         resourceGroupName: 'NetflixProject'
-        location: 'UK West'
+        location: 'ukwest'
         templateLocation: 'Linked artifact'
         csmFile: 'main.bicep'
         csmParametersFile: 'main.bicepparam'
