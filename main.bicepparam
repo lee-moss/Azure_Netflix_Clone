@@ -1,23 +1,25 @@
 using 'main.bicep'
 
-// Network and VM parameters
-param networkSecurityGroupName = 'myNSG' // Name of the Network Security Group
-param virtualNetworkName       = 'Netflix_Vnet' // Name of the Virtual Network
-param subnetName               = 'subnet' // Name of the Subnet
-param location                 = 'UkWest' // Deployment location
-param computerName             = '' // Name of the computer
-param virtualMachineName       = '' // Name of the Virtual Machine
+// Network parameters
+param networkSecurityGroupName   = 'myNSG'
+param virtualNetworkName         = 'Netflix_Vnet'
+param subnetName                 = 'subnet'
+param location                   = 'uksouth'
 
-// Admin credentials and Key Vault
-param adminLogin               = '' // Admin login username
-param keyVaultName             = 'Your-keyvault' // Name of the Key Vault
-param adminPassword            = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'adminLogin') // Admin password from Key Vault
-param sshPublicKey             = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'sshPublicKey') // SSH public key from Key Vault
+// VM parameters
+param computerName               = 'NetflixComp'
+param virtualMachineName         = 'Netflix_VM'
+
+// Admin credentials
+param adminLogin                 = 'LAM5'
+param keyVaultName               = 'NetflixSecret'
+param adminPassword              = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
+param sshPublicKey               = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'sshPublicKey')
 
 // Custom script extension
-param customScriptExtensionName  = 'installJenkins' // Name of the custom script extension
+param customScriptExtensionName  = 'installJenkins'
 
-// Network Security Group rules
+// Network security group rules
 param networkSecurityGroupRules = [
   {
     name: 'Allow-HTTP'
@@ -48,7 +50,7 @@ param networkSecurityGroupRules = [
   {
     name: 'SSH'
     properties: {
-      priority: 1031
+      priority: 1040
       protocol: 'TCP'
       access: 'Allow'
       direction: 'Inbound'
@@ -62,7 +64,7 @@ param networkSecurityGroupRules = [
   }
 ]
 
-// Public IP address parameters
-param publicIpAddressName = 'YOUR-PUBLIC-IP' // Name of the Public IP address
-param publicIpAddressType = 'Static' // Type of the Public IP address
-param publicIpAddressSku = 'Basic' // SKU of the Public IP address
+// Public IP parameters
+param publicIpAddressName = 'PUBLIC-IP-NETFLIX'
+param publicIpAddressType = 'Static'
+param publicIpAddressSku = 'Basic'
