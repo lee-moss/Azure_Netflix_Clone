@@ -12,8 +12,8 @@ jobs:
     steps:
     - task: AzureKeyVault@2
       inputs:
-        azureSubscription: 'Netflix'
-        KeyVaultName: 'NetflixSecret'
+        azureSubscription: '$(Netflix)'
+        KeyVaultName: '$(NetflixSecret)'
         SecretsFilter: '*'
         RunAsPreJob: false
 
@@ -22,11 +22,11 @@ jobs:
     - task: AzureResourceManagerTemplateDeployment@3
       inputs:
         deploymentScope: 'Resource Group'
-        azureResourceManagerConnection: 'Netflix'
-        subscriptionId: 488dbdc5-85c6-402d-811f-eb47d17f391f
+        azureResourceManagerConnection: '$(Netflix)'
+        subscriptionId: '488dbdc5-85c6-402d-811f-eb47d17f391f'
         action: 'Create Or Update Resource Group'
         resourceGroupName: 'NetflixProject'
-        location: 'ukwest'
+        location: 'UK West'
         templateLocation: 'Linked artifact'
         csmFile: 'main.bicep'
         csmParametersFile: 'main.bicepparam'
