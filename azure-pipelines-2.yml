@@ -1,9 +1,0 @@
-jobs:
-- job: TestConnection
-  steps:
-  - task: AzureCLI@2
-    inputs:
-      azureSubscription: 'Azure subscription 1'
-      scriptType: 'ps'
-      scriptLocation: 'inlineScript'
-      inlineScript: 'az account show'
