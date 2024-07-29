@@ -37,18 +37,6 @@ $dockerServiceConfig | Out-File -FilePath "/etc/systemd/system/docker.service.d/
 Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "daemon-reload"
 Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "restart", "docker"
 
-# Add 'azureuser' and 'jenkins' to the 'docker' group if they exist
-Write-Host "Adding users to Docker group..."
-$users = @("azureuser", "jenkins")
-foreach ($user in $users) {
-    $userExists = Get-LocalUser -Name $user -ErrorAction SilentlyContinue
-    if ($userExists) {
-        Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "usermod", "-aG", "docker", $user
-    } else {
-        Write-Host "User $user does not exist. Skipping..."
-    }
-}
-
 # Restart Jenkins service
 Write-Host "Restarting Jenkins service..."
 Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "restart", "jenkins"
