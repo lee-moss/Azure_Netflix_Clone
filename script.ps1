@@ -2,7 +2,7 @@
 
 # Update package list and upgrade packages
 Write-Host "Updating package list and upgrading packages..."
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get update && sudo apt-get upgrade -y"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get update && apt-get upgrade -y"
 
 # Install OpenJDK 8
 Write-Host "Installing OpenJDK 8..."
@@ -10,13 +10,13 @@ Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get install
 
 # Add Jenkins repository and key
 Write-Host "Adding Jenkins repository and key..."
-Invoke-WebRequest -Uri "https://pkg.jenkins.io/debian/jenkins-ci.org.key" -OutFile "jenkins-ci.org.key"
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-key add jenkins-ci.org.key"
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'"
+Invoke-WebRequest -Uri "https://pkg.jenkins.io/debian/jenkins.io.key" -OutFile "jenkins.io.key"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-key add jenkins.io.key"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'"
 
 # Update package list again and install Jenkins
 Write-Host "Updating package list and installing Jenkins..."
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get update && sudo apt-get install jenkins -y"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get update && apt-get install jenkins -y"
 
 # Install Docker
 Write-Host "Installing Docker..."
@@ -28,27 +28,33 @@ Write-Host "Configuring Docker to listen on TCP..."
 $dockerServiceConfig = @"
 [Service]
 ExecStart=
-ExecStart=/usr/bin/dockerd
-"@
-$dockerDaemonConfig = @"
-{
-  "hosts": ["fd://","tcp://127.0.0.1:2375"]
-}
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://127.0.0.1:2375
 "@
 Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "mkdir -p /etc/systemd/system/docker.service.d"
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash -c 'echo $dockerServiceConfig | tee /etc/systemd/system/docker.service.d/docker.conf'"
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash -c 'echo $dockerDaemonConfig | tee /etc/docker/daemon.json'"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash -c 'echo \"$dockerServiceConfig\" | tee /etc/systemd/system/docker.service.d/docker.conf'"
 
-# Add 'azureuser' and 'jenkins' to the 'docker' group
+# Reload systemd and restart Docker
+Write-Host "Reloading systemd and restarting Docker..."
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl daemon-reload"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl restart docker"
+
+# Add 'azureuser' and 'jenkins' to the 'docker' group if they exist
 Write-Host "Adding users to Docker group..."
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "usermod -aG docker azureuser"
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "usermod -aG docker jenkins"
+$users = @("azureuser", "jenkins")
+foreach ($user in $users) {
+    $userExists = (Get-Process -ErrorAction SilentlyContinue -Name $user) -ne $null
+    if ($userExists) {
+        Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "usermod -aG docker $user"
+    } else {
+        Write-Host "User $user does not exist. Skipping..."
+    }
+}
 
 # Restart Jenkins service
 Write-Host "Restarting Jenkins service..."
-Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "service jenkins restart"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl restart jenkins"
 
 # Clean up temporary files
-Remove-Item -Path "jenkins-ci.org.key", "get-docker.sh" -Force
+Remove-Item -Path "jenkins.io.key", "get-docker.sh" -Force
 
 Write-Host "Configuration complete."
