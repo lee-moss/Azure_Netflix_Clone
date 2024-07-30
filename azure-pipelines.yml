@@ -16,7 +16,7 @@ jobs:
         KeyVaultName: 'NetflixSecret'
         SecretsFilter: '*'
 
-    - task: AzureCLI@2
+    - task: AzureResourceManagerTemplateDeployment@3
       inputs:
         deploymentScope: 'Resource Group'
         azureResourceManagerConnection: 'Netflix'
