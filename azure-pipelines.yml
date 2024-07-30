@@ -27,5 +27,5 @@ jobs:
         templateLocation: 'Linked artifact'
         csmFile: 'main.bicep'
         csmParametersFile: 'main.bicepparam'
-        deploymentMode: 'Validation'
+        deploymentMode: 'Incremental'
    
