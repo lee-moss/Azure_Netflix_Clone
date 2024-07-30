@@ -1,4 +1,4 @@
-trigger: none
+trigger: -main
 
 pool:
   vmImage: ubuntu-latest
@@ -15,11 +15,8 @@ jobs:
         azureSubscription: 'Netflix'
         KeyVaultName: 'NetflixSecret'
         SecretsFilter: '*'
-        RunAsPreJob: false
 
-    - pwsh: ./script.ps1
-
-    - task: AzureResourceManagerTemplateDeployment@3
+    - task: AzureCLI@2
       inputs:
         deploymentScope: 'Resource Group'
         azureResourceManagerConnection: 'Netflix'
@@ -31,4 +28,4 @@ jobs:
         csmFile: 'main.bicep'
         csmParametersFile: 'main.bicepparam'
         deploymentMode: 'Validation'
-    # Add more steps here if needed
+   
