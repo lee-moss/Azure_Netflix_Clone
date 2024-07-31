@@ -16,8 +16,7 @@ param keyVaultName               = 'NetflixSecret'
 param adminPassword              = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
 param sshPublicKey               = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'sshPublicKey')
 
-// Custom script extension
-param customScriptExtensionName  = 'installJenkins'
+
 
 // Network security group rules
 param networkSecurityGroupRules = [
