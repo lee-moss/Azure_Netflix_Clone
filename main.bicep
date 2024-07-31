@@ -9,7 +9,7 @@ param publicIpAddressType string
 param publicIpAddressSku string
 param virtualMachineName string
 param keyVaultName string
-param customScriptExtensionName string
+// param customScriptExtensionName string
 
 param adminLogin string
 @secure()
