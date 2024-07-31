@@ -172,20 +172,20 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   }
 }
 
-resource jenkins_docker_script 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
-  name: customScriptExtensionName
-  parent: Virtual_Machine
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        'https://dev.azure.com/LAM5/NetFlix/_git/NetFlix/?path=/script.ps1&version=GBmain&_a=contents'
-      ]
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup-jenkins-docker.ps1'
-    }
-  }
-}
+// resource jenkins_docker_script 'Microsoft.Compute/virtualMachines/extensions@2024-03-01' = {
+//   name: customScriptExtensionName
+//   parent: Virtual_Machine
+//   location: location
+//   properties: {
+//     publisher: 'Microsoft.Compute'
+//     type: 'CustomScriptExtension'
+//     typeHandlerVersion: '1.10'
+//     autoUpgradeMinorVersion: true
+//     settings: {
+//       fileUris: [
+//         'https://dev.azure.com/LAM5/NetFlix/_git/NetFlix/?path=/script.ps1&version=GBmain&_a=contents'
+//       ]
+//       commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File setup-jenkins-docker.ps1'
+//     }
+//   }
+// }
