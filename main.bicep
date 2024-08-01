@@ -37,6 +37,57 @@ resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2024-03-01' = {
 }
 
 // #############################################################################
+// NETWORK SECURITY GROUP
+// #############################################################################
+
+resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: networkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: networkSecurityGroupRules
+  }
+}
+
+// #############################################################################
+// VIRTUAL NETWORK
+// #############################################################################
+
+resource virtualNetworkName_resource 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+  name: virtualNetworkName
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: subnetName
+        properties: {
+          addressPrefix: '10.0.0.0/24'
+        }
+      }
+    ]
+  }
+}
+
+// #############################################################################
+// PUBLIC IP
+// #############################################################################
+
+resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
+  name: publicIpAddressName
+  location: location
+  properties: {
+    publicIPAllocationMethod: publicIpAddressType
+  }
+  sku: {
+    name: publicIpAddressSku
+  }
+}
+
+// #############################################################################
 // NETWORK INTERFACE CARD
 // #############################################################################
 
@@ -66,57 +117,6 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
     networkSecurityGroupName_resource
     virtualNetworkName_resource
   ]
-}
-
-// #############################################################################
-// VIRTUAL NETWORK
-// #############################################################################
-
-resource virtualNetworkName_resource 'Microsoft.Network/virtualNetworks@2023-11-01' = {
-  name: virtualNetworkName
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: subnetName
-        properties: {
-          addressPrefix: '10.0.0.0/24'
-        }
-      }
-    ]
-  }
-}
-
-// #############################################################################
-// NETWORK SECURITY GROUP
-// #############################################################################
-
-resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
-  name: networkSecurityGroupName
-  location: location
-  properties: {
-    securityRules: networkSecurityGroupRules
-  }
-}
-
-// #############################################################################
-// PUBLIC IP
-// #############################################################################
-
-resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-  name: publicIpAddressName
-  location: location
-  properties: {
-    publicIPAllocationMethod: publicIpAddressType
-  }
-  sku: {
-    name: publicIpAddressSku
-  }
 }
     
 // #############################################################################
