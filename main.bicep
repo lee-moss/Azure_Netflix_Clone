@@ -133,13 +133,9 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
 
     storageProfile: {
       imageReference: {
-        // publisher: 'Canonical'
-        // offer: 'UbuntuServer'
-        // sku: '18.04-LTS'
-        // version: 'latest'
-        publisher: 'bitnami'
-        offer: 'jenkins'
-        sku: '1-650'
+        publisher: 'Canonical'
+        offer: 'UbuntuServer'
+        sku: '18.04-LTS'
         version: 'latest'
       }
       osDisk: {
