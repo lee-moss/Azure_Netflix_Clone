@@ -1,51 +1,47 @@
 # PowerShell Script to Install and Configure Docker and Jenkins
 
 # Update package list and upgrade packages
-Write-Output "Updating package list and upgrading packages..."
-Invoke-Expression 'sudo apt-get update && sudo apt-get upgrade -y'
+Write-Host "Updating package list and upgrading packages..."
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get", "update"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get", "upgrade", "-y"
 
 # Install OpenJDK 8
-Write-Output "Installing OpenJDK 8..."
-Invoke-Expression 'sudo apt-get install openjdk-8-jre-headless -y'
+Write-Host "Installing OpenJDK 8..."
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get", "install", "openjdk-8-jre-headless", "-y"
 
 # Add Jenkins repository and key
-Write-Output "Adding Jenkins repository and key..."
-Invoke-WebRequest -Uri "https://pkg.jenkins.io/debian/jenkins-ci.org.key" -OutFile "jenkins-ci.org.key"
-Invoke-Expression 'sudo apt-key add jenkins-ci.org.key'
-Invoke-Expression 'sudo sh -c ''echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'''
+Write-Host "Adding Jenkins repository and key..."
+Invoke-WebRequest -Uri "https://pkg.jenkins.io/debian/jenkins.io.key" -OutFile "jenkins.io.key"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-key", "add", "jenkins.io.key"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "sh", "-c", "echo 'deb http://pkg.jenkins.io/debian-stable binary/' | tee /etc/apt/sources.list.d/jenkins.list"
 
 # Update package list again and install Jenkins
-Write-Output "Updating package list and installing Jenkins..."
-Invoke-Expression 'sudo apt-get update && sudo apt-get install jenkins -y'
+Write-Host "Updating package list and installing Jenkins..."
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get", "update"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "apt-get", "install", "jenkins", "-y"
 
 # Install Docker
-Write-Output "Installing Docker..."
+Write-Host "Installing Docker..."
 Invoke-WebRequest -Uri "https://get.docker.com/" -OutFile "get-docker.sh"
-Invoke-Expression 'sudo sh get-docker.sh'
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "sh", "get-docker.sh"
 
 # Configure Docker to listen on TCP
-Write-Output "Configuring Docker to listen on TCP..."
+Write-Host "Configuring Docker to listen on TCP..."
 $dockerServiceConfig = @"
 [Service]
 ExecStart=
-ExecStart=/usr/bin/dockerd
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://127.0.0.1:2375
 "@
-$dockerDaemonConfig = @"
-{
-  "hosts": ["fd://","tcp://127.0.0.1:2375"]
-}
-"@
-New-Item -Path /etc/systemd/system/docker.service.d -ItemType Directory -Force
-Set-Content -Path /etc/systemd/system/docker.service.d/docker.conf -Value $dockerServiceConfig
-Set-Content -Path /etc/docker/daemon.json -Value $dockerDaemonConfig
-
-# Add 'azureuser' and 'jenkins' to the 'docker' group
-Write-Output "Adding users to Docker group..."
-Invoke-Expression 'sudo usermod -aG docker azureuser'
-Invoke-Expression 'sudo usermod -aG docker jenkins'
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "bash", "-c", "mkdir -p /etc/systemd/system/docker.service.d"
+$dockerServiceConfig | Out-File -FilePath "/etc/systemd/system/docker.service.d/docker.conf" -Encoding utf8
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "daemon-reload"
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "restart", "docker"
 
 # Restart Jenkins service
-Write-Output "Restarting Jenkins service..."
-Invoke-Expression 'sudo service jenkins restart'
+Write-Host "Restarting Jenkins service..."
+Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "restart", "jenkins"
 
-Write-Output "Configuration complete."
+# Clean up temporary files
+Remove-Item -Path "jenkins.io.key", "get-docker.sh" -Force
+
+Write-Host "Configuration complete."
