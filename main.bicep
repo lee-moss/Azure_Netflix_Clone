@@ -19,9 +19,7 @@ param adminPassword string
 param sshPublicKey string
 
 var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
-var vnetId    = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', virtualNetworkName)
-var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', vnetId, subnetName)
-
+var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
 
 // #############################################################################
 // KEY VAULT & SSH PUBLIC KEY
