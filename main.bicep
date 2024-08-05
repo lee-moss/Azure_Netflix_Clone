@@ -10,12 +10,9 @@ param publicIpAddressSku string
 param virtualMachineName string
 param keyVaultName string
 
-
 param adminLogin string
 @secure()
-param adminPassword string
-@secure()
-param sshPublicKey string
+param adminPasswordOrKey string
 
 var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
 var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
@@ -26,7 +23,7 @@ var linuxConfiguration = {
     publicKeys: [
       {
        path: '/home/${adminLogin}/.ssh/authorized_keys'
-       keyData: sshPublicKeys.properties.publicKey
+       keyData: adminPasswordOrKey
       }
     ]
   }
@@ -46,7 +43,7 @@ resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2023-09-01' = {
   name: sshPublicKey
   location: location
   properties: {
-    publicKey: sshPublicKey
+    publicKey: adminPasswordOrKey
   }
 }
 
@@ -158,9 +155,9 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
     }
     osProfile: {
       computerName: computerName
-      adminPassword: adminPassword
+      adminPassword: adminPasswordOrKey
       adminUsername: adminLogin
-      linuxConfiguration: any(sshPublicKey == 'password' ? null : linuxConfiguration)
+      linuxConfiguration: any(adminPasswordOrKey == 'password' ? null : linuxConfiguration)
     }
     networkProfile: {
       networkInterfaces: [
