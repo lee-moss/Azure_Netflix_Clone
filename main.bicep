@@ -20,6 +20,18 @@ param sshPublicKey string
 var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
 var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
 
+var linuxConfiguration = {
+  disablePasswordAuthentication: true
+  ssh: {
+    publicKeys: [
+      {
+       path: '/home/${adminLogin}/.ssh/authorized_keys'
+       keyData: sshPublicKeys.properties.publicKey
+      }
+    ]
+  }
+}
+
 // #############################################################################
 // KEY VAULT & SSH PUBLIC KEY
 // #############################################################################
@@ -148,17 +160,7 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
       computerName: computerName
       adminPassword: adminPassword
       adminUsername: adminLogin
-      linuxConfiguration: {
-        disablePasswordAuthentication: true
-        ssh: {
-          publicKeys: [
-            {
-              path: '/home/${adminLogin}/.ssh/authorized_keys'
-              keyData: sshPublicKeys.properties.secretUri
-            }
-          ]
-        }
-      }
+      linuxConfiguration: any(sshPublicKey == 'password' ? null : linuxConfiguration)
     }
     networkProfile: {
       networkInterfaces: [
