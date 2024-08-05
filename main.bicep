@@ -7,6 +7,11 @@ param networkSecurityGroupRules array
 param publicIpAddressName string
 param publicIpAddressType string
 param publicIpAddressSku string
+
+@allowed([
+  'sshPublicKey'
+  'adminPassword'
+])
 param authenticationType string
 param virtualMachineName string
 
