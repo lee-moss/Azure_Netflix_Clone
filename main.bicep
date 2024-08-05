@@ -148,7 +148,7 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
           publicKeys: [
             {
               path: '/home/${adminLogin}/.ssh/authorized_keys'
-              keyData: sshPublicKeys.properties.publicKey
+              keyData: sshPublicKeys.properties.secretUri
             }
           ]
         }
