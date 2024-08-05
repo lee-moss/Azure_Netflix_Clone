@@ -8,7 +8,7 @@ param publicIpAddressName string
 param publicIpAddressType string
 param publicIpAddressSku string
 param virtualMachineName string
-param sshPublicKey string
+// param sshPublicKey string
 param customScriptExtensionName string
 
 param adminLogin string
