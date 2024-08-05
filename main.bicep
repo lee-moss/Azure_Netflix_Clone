@@ -163,7 +163,7 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
       computerName: computerName
       adminPassword: adminPassword
       adminUsername: adminLogin
-      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration)
+      linuxConfiguration: any(sshPublicKey == 'password' ? null : linuxConfiguration)
     }
     networkProfile: {
       networkInterfaces: [
