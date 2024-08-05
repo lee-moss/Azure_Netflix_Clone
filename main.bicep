@@ -8,7 +8,6 @@ param publicIpAddressName string
 param publicIpAddressType string
 param publicIpAddressSku string
 param virtualMachineName string
-param keyVaultName string
 
 param adminLogin string
 @secure()
@@ -26,24 +25,6 @@ var linuxConfiguration = {
        keyData: adminPasswordOrKey
       }
     ]
-  }
-}
-
-// #############################################################################
-// KEY VAULT & SSH PUBLIC KEY
-// #############################################################################
-
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
-  scope: resourceGroup('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject')
-}
-
-resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2023-09-01' = {
-  name: sshPublicKey
-  location: location
-  properties: {
-    publicKey: adminPasswordOrKey
   }
 }
 
