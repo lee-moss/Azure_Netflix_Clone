@@ -13,9 +13,7 @@ param virtualMachineName         = 'Netflix_VM'
 // Admin credentials
 param adminLogin                 = 'LAM5'
 param keyVaultName               = 'NetflixSecret'
-param adminPassword              = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
-param sshPublicKey               = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'sshPublicKey')
-
+param adminPasswordOrKey         = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
 
 
 // Network security group rules
