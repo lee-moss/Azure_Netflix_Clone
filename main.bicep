@@ -27,13 +27,9 @@ var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetwo
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
   name: keyVaultName
 }
-
-resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2024-03-01' = {
-  name: '${virtualNetworkName}--sshPublicKeys'
-  location: location
-  properties: {
-    publicKey: reference('${keyVault.id}/secrets/${sshPublicKey}', '2021-11-01-preview').value
-  } 
+resource  sshPublicKeys 'Microsoft.KeyVault/vaults/secrets@2023-07-01' existing = {
+  parent: keyVault
+   name: sshPublicKey
 }
 
 // #############################################################################
