@@ -7,6 +7,7 @@ param networkSecurityGroupRules array
 param publicIpAddressName string
 param publicIpAddressType string
 param publicIpAddressSku string
+param authenticationType string
 param virtualMachineName string
 
 param adminLogin string
@@ -138,7 +139,7 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
       computerName: computerName
       adminPassword: adminPasswordOrKey
       adminUsername: adminLogin
-      linuxConfiguration: any(adminPasswordOrKey == 'password' ? null : linuxConfiguration)
+      linuxConfiguration: any(authenticationType == 'password' ? null : linuxConfiguration)
     }
     networkProfile: {
       networkInterfaces: [
