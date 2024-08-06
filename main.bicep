@@ -124,26 +124,22 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
     hardwareProfile: {
       vmSize: 'Standard_D2s_v3'
     }
-
+    osProfile: {
+      computerName: computerName
+      adminPassword: adminPassword
+      adminUsername: adminLogin
+    }
     storageProfile: {
       imageReference: {
-        // publisher: 'Canonical'
-        // offer: 'UbuntuServer'
-        // sku: '18.04-LTS'
-        // version: 'latest'
-        publisher: 'bitnami'
-        offer: 'jenkins'
-        sku: '1-650'
+        publisher: 'Canonical'
+        offer: 'UbuntuServer'
+        sku: '18.04-LTS'
         version: 'latest'
       }
       osDisk: {
         createOption: 'FromImage'
       }
     }
-    osProfile: {
-      computerName: computerName
-      adminPassword: adminPassword
-      adminUsername: adminLogin
     networkProfile: {
       networkInterfaces: [
         {
