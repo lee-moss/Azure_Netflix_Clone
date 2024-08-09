@@ -67,7 +67,7 @@ param networkSecurityGroupRules = [
   {
     name: 'SSH'
     properties: {
-      priority: 1040
+      priority: 100
       protocol: 'TCP'
       access: 'Allow'
       direction: 'Inbound'
