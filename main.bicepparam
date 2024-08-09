@@ -1,18 +1,40 @@
 using 'main.bicep'
 
 // Network parameters
-param networkSecurityGroupName   = 'myNSG'
 param virtualNetworkName         = 'Netflix_Vnet'
 param subnetName                 = 'subnet'
+param networkSecurityGroupName   = 'myNSG'
 param location                   = 'uksouth'
 
-// VM parameters
-param computerName               = 'NetflixComp'
-param virtualMachineName         = 'Netflix_VM'
-
-// Admin credentials
-param adminLogin                 = 'LAM5'
 param adminPassword              = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
+
+// VM Configurations
+param vmConfigs = [
+  {
+    computerName: 'JenkinsVM'
+    virtualMachineName: 'Jenkins_VM'
+    adminLogin: 'JenkinsAdmin'
+    publicIpAddressName: 'JenkinsPublicIP'
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+  {
+    computerName: 'PrometheusVM'
+    virtualMachineName: 'Prometheus_VM'
+    adminLogin: 'PrometheusAdmin'
+    publicIpAddressName: 'PrometheusPublicIP'
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+  {
+    computerName: 'GrafanaVM'
+    virtualMachineName: 'Grafana_VM'
+    adminLogin: 'GrafanaAdm'
+    publicIpAddressName: 'GrafanaPublicIP'
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+]
 
 // Network security group rules
 param networkSecurityGroupRules = [
@@ -57,9 +79,19 @@ param networkSecurityGroupRules = [
       destinationPortRange: '22'
     }
   }
+  {
+    name: 'Open 8080'
+    properties: {
+      priority: 100
+      protocol: 'TCP'
+      access: 'Allow'
+      direction: 'Inbound'
+      sourceApplicationSecurityGroups: []
+      destinationApplicationSecurityGroups: []
+      sourceAddressPrefix: '*'
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '8080'
+    }
+  }
 ]
-
-// Public IP parameters
-param publicIpAddressName = 'PUBLIC-IP-NETFLIX'
-param publicIpAddressType = 'Static'
-param publicIpAddressSku = 'Basic'

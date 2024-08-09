@@ -1,41 +1,26 @@
-param networkSecurityGroupName string
+param location string 
+param vmConfigs array
+param networkSecurityGroupRules array
 param virtualNetworkName string
 param subnetName string
-param location string 
-param computerName string
-param networkSecurityGroupRules array
-param publicIpAddressName string
-param publicIpAddressType string
-param publicIpAddressSku string
-param virtualMachineName string
-// param sshPublicKey string
-// param customScriptExtensionName string
+param networkSecurityGroupName string
 
-param adminLogin string
 @secure()
 param adminPassword string
 
-var nsgId     = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
+// #############################################################################
+// RESOURCE IDS
+// #############################################################################
+
+var nsgId = resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', networkSecurityGroupName)
 var subnetRef = resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
 
 // #############################################################################
-// KEY VAULT & SSH PUBLIC KEY
+// NETWORK INTERFACE CARDS (NICs)
 // #############################################################################
 
-// resource sshPublicKeys 'Microsoft.Compute/sshPublicKeys@2024-03-01' = {
-//   name: '${virtualNetworkName}--sshPublicKeys'
-//   location: location
-//   properties: {
-//     publicKey: reference('${keyVault.id}/secrets/${adminPasswordOrKey}', '2021-11-01-preview').value
-//   } 
-// }
-
-// #############################################################################
-// NETWORK INTERFACE CARD
-// #############################################################################
-
-resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: 'Netflix_VM-nic'
+resource nicResources 'Microsoft.Network/networkInterfaces@2023-11-01' = [for vmConfig in vmConfigs: {
+  name: '${vmConfig.virtualMachineName}-nic'
   location: location
   properties: {
     ipConfigurations: [
@@ -47,7 +32,7 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: PiP.id
+            id: publicIpResources[vmConfig.virtualMachineName].id
           }
         }
       }
@@ -60,7 +45,8 @@ resource NIC 'Microsoft.Network/networkInterfaces@2023-11-01' = {
     networkSecurityGroupName_resource
     virtualNetworkName_resource
   ]
-}
+ }
+]
 
 // #############################################################################
 // VIRTUAL NETWORK
@@ -99,35 +85,35 @@ resource networkSecurityGroupName_resource 'Microsoft.Network/networkSecurityGro
 }
 
 // #############################################################################
-// PUBLIC IP
+// PUBLIC IP ADDRESSES
 // #############################################################################
 
-resource PiP 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-  name: publicIpAddressName
+resource publicIpResources 'Microsoft.Network/publicIPAddresses@2023-11-01' = [for vmConfig in vmConfigs: {
+  name: vmConfig.publicIpAddressName
   location: location
   properties: {
-    publicIPAllocationMethod: publicIpAddressType
+    publicIPAllocationMethod: vmConfig.publicIpAddressType
   }
   sku: {
-    name: publicIpAddressSku
+    name: vmConfig.publicIpAddressSku
   }
-}
-    
+}]
+
 // #############################################################################
-// VIRTUAL MACHINE
+// VIRTUAL MACHINES
 // #############################################################################
 
-resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: virtualMachineName
+resource vmResources 'Microsoft.Compute/virtualMachines@2024-03-01' = [for vmConfig in vmConfigs: {
+  name: vmConfig.virtualMachineName
   location: location
   properties: {
     hardwareProfile: {
       vmSize: 'Standard_D2s_v3'
     }
     osProfile: {
-      computerName: computerName
+      computerName: vmConfig.computerName
       adminPassword: adminPassword
-      adminUsername: adminLogin
+      adminUsername: vmConfig.adminLogin
     }
     storageProfile: {
       imageReference: {
@@ -143,9 +129,9 @@ resource Virtual_Machine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
     networkProfile: {
       networkInterfaces: [
         {
-          id: resourceId('Microsoft.Network/networkInterfaces', 'Netflix_VM-nic')
+          id: nicResources[vmConfig.virtualMachineName].id
         }
       ]
     }
   }
-}
+}]

@@ -45,3 +45,6 @@ Start-Process -NoNewWindow -Wait -FilePath "sudo" -ArgumentList "systemctl", "re
 Remove-Item -Path "jenkins.io.key", "get-docker.sh" -Force
 
 Write-Host "Configuration complete."
+
+
+
