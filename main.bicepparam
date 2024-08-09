@@ -1,19 +1,42 @@
 using 'main.bicep'
 
-param networkSecurityGroupName = 'myNSG'
-param virtualNetworkName       = 'Netflix_Vnet'
-param subnetName               = 'subnet'
-param location                 = 'UkWest'
-param computerName             = ''
-param virtualMachineName       = ''
+// Network parameters
+param virtualNetworkName         = ''
+param subnetName                 = 'subnet'
+param networkSecurityGroupName   = 'myNSG'
+param location                   = 'uksouth'
 
-param adminLogin               = ''
-param keyVaultName             = 'Your-keyvault'
-param adminPassword            = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'adminLogin')
-param sshPublicKey             = az.getSecret('your-subscription-id', 'NetflixProject','yourSecret', 'sshPublicKey')
+param adminPassword              = az.getSecret('')
 
-param customScriptExtensionName  = 'installJenkins'
+// VM Configurations
+param vmConfigs = [
+  {
+    computerName: 'Jenkins'
+    virtualMachineName: ''
+    adminLogin: ''
+    publicIpAddressName: ''
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+  {
+    computerName: 'Prometheus'
+    virtualMachineName: '
+    adminLogin: ''
+    publicIpAddressName: ''
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+  {
+    computerName: 'Grafana'
+    virtualMachineName: ''
+    adminLogin: ''
+    publicIpAddressName: ''
+    publicIpAddressType: 'Static'
+    publicIpAddressSku: 'Basic'
+  }
+]
 
+// Network security group rules
 param networkSecurityGroupRules = [
   {
     name: 'Allow-HTTP'
@@ -44,7 +67,7 @@ param networkSecurityGroupRules = [
   {
     name: 'SSH'
     properties: {
-      priority: 1031
+      priority: 100
       protocol: 'TCP'
       access: 'Allow'
       direction: 'Inbound'
@@ -56,11 +79,19 @@ param networkSecurityGroupRules = [
       destinationPortRange: '22'
     }
   }
+  {
+    name: 'Open 8080'
+    properties: {
+      priority: 100
+      protocol: 'TCP'
+      access: 'Allow'
+      direction: 'Inbound'
+      sourceApplicationSecurityGroups: []
+      destinationApplicationSecurityGroups: []
+      sourceAddressPrefix: '*'
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '8080'
+    }
+  }
 ]
-
-param publicIpAddressName = 'YOUR-PUBLIC-IP'
-
-param publicIpAddressType = 'Static'
-
-param publicIpAddressSku = 'Basic'
-
