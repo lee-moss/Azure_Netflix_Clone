@@ -45,7 +45,7 @@ param networkSecurityGroupRules = [
   {
     name: 'SSH'
     properties: {
-      priority: 1040
+      priority: 100
       protocol: 'TCP'
       access: 'Allow'
       direction: 'Inbound'
@@ -55,6 +55,21 @@ param networkSecurityGroupRules = [
       sourcePortRange: '*'
       destinationAddressPrefix: '*'
       destinationPortRange: '22'
+    }
+  }
+  {
+    name: 'Jenkins'
+    properties: {
+      priority: 101
+      protocol: 'TCP'
+      access: 'Allow'
+      direction: 'Inbound'
+      sourceApplicationSecurityGroups: []
+      destinationApplicationSecurityGroups: []
+      sourceAddressPrefix: '*'
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '8080'
     }
   }
 ]
