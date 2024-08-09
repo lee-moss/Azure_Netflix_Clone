@@ -20,7 +20,7 @@ param vmConfigs = [
   }
   {
     computerName: 'Prometheus'
-    virtualMachineName: '
+    virtualMachineName: ''
     adminLogin: ''
     publicIpAddressName: ''
     publicIpAddressType: 'Static'
