@@ -122,11 +122,6 @@ resource vmResources 'Microsoft.Compute/virtualMachines@2024-03-01' = [for vmCon
         sku: '18.04-LTS'
         version: 'latest'
       }
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
-      }
       osDisk: {
         createOption: 'FromImage'
       }
