@@ -51,7 +51,7 @@ var grafanaNsgRef = resourceId('Microsoft.Network/networkSecurityGroups', grafan
 // #############################################################################
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
-  name: 'myVnet'
+  name: virtualNetworkName
   location: location
   properties: {
     addressSpace: {
