@@ -2,8 +2,8 @@ using 'main.bicep'
 
 param location      = 'uksouth'
 
-param adminLogin    = 'LAM5'
-param adminPassword = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
+param adminLogin    = ''
+param adminPassword = az.getSecret('')
 
 // Network security group rules
 param jenkins_NsgRules = [
