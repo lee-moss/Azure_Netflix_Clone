@@ -1,106 +1,66 @@
-param location string 
-param virtualNetworkName string
-param jenkins_nsg string
-param prometheus_nsg string
-param jenkinsSubnet string
-param monitoringSubnet string
-param grafana_nsg string
 param jenkins_NsgRules array
 param prometheus_NsgRules array
 param grafana_NsgRules array
+param location string 
 
-param jenkins_computer    string
-param prometheus_computer string
-param grafana_computer    string
- 
-
-// Admin login for VMs
 param adminLogin string
 @secure()
 param adminPassword string
-
-// Public IP parameters
-param jenkinsPublicIpName string 
-param prometheusPublicIpName string 
-param grafanaPublicIpName string 
-param publicIpType string 
-param publicIpSku string 
-
-// VM names and NIC names
-param jenkinsVmName string 
-param prometheusVmName string 
-param grafanaVmName string 
-
-
-// Reference specific subnets
-var J_subnetRef = resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, jenkinsSubnet)
-var M_subnetRef = resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, monitoringSubnet)
-
-
-// Reference to Jenkins NSG
-var jenkinsNsgRef = resourceId('Microsoft.Network/networkSecurityGroups', jenkins_nsg)
-
-// Reference to Prometheus NSG
-var prometheusNsgRef = resourceId('Microsoft.Network/networkSecurityGroups', prometheus_nsg)
-
-// Reference to Grafana NSG
-var grafanaNsgRef = resourceId('Microsoft.Network/networkSecurityGroups', grafana_nsg)
 
 // #############################################################################
 // VIRTUAL NETWORK
 // #############################################################################
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
-  name: 'myVnet'
-  location: location
-  properties: {
-    addressSpace: {
-      addressPrefixes: [
-        '10.0.0.0/16'
-      ]
-    }
-    subnets: [
-      {
-        name: jenkinsSubnet
-        properties: {
-          addressPrefix: '10.0.1.0/24'
-        }
-      }
-      {
-        name: monitoringSubnet
-        properties: {
-          addressPrefix: '10.0.2.0/24'
-        }
-      }
-    ]
+module vnetModule 'modules/networking/vnet.bicep' = {
+  name: 'vnetDeployment'
+  params: {
+    virtualNetworkName: 'myVNet'
+    vnetAddressPrefix: '10.0.0.0/16'
+    subnet1Name: 'jenkinsSubnet'
+    subnet1Prefix: '10.0.1.0/24'
+    subnet2Name: 'monitoringSubnet'
+    subnet2Prefix: '10.0.2.0/24'
   }
 }
+
+output vnetId string = vnetModule.outputs.vnetId
+output jenkinsSubnetId string = vnetModule.outputs.subnet1Id
+output monitoringSubnetId string = vnetModule.outputs.subnet2Id
 
 // #############################################################################
 // NETWORK SECURITY GROUP'S
 // #############################################################################
 
-resource nsg_jenkins 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
-  name: jenkins_nsg
-  location: location
-  properties: {
-    securityRules: jenkins_NsgRules
+module jenkinsNsg 'modules/networking/networkSecurityGroup.bicep' = {
+  name: 'jenkinsNsgDeployment'
+  params: {
+    location: location
+    nsgName: 'jenkinsNsg'
+    nsgRules: [
+      jenkins_NsgRules
+    ]
   }
 }
 
-resource nsg_prometheus 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
-  name: prometheus_nsg
-  location: location
-  properties: {
-    securityRules: prometheus_NsgRules
+module prometheusNsg 'modules/networking/networkSecurityGroup.bicep' = {
+  name: 'prometheusNsgDeployment'
+  params: {
+    location: location
+    nsgName: 'prometheusNsg'
+    nsgRules: [
+      prometheus_NsgRules
+    ]
   }
 }
 
-resource nsg_grafana 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
-  name: grafana_nsg
-  location: location
-  properties: {
-    securityRules: grafana_NsgRules
+module grafanaNsg 'modules/networking/networkSecurityGroup.bicep' = {
+  name: 'grafanaNsgDeployment'
+  params: {
+    location: location
+    nsgName: 'grafanaNsg'
+    nsgRules: [
+      grafana_NsgRules
+    ]
   }
 }
 
@@ -108,124 +68,70 @@ resource nsg_grafana 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
 // NETWORK INTERFACE CARDS
 // #############################################################################
 
-resource jenkinsNic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: jenkinsVmName
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: J_subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: jenkinsPip.id
-          }
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: jenkinsNsgRef
-    }
+module jenkinsNic 'modules/networking/networkInterfaceCard.bicep' = {
+  name: 'jenkinsNicDeployment'
+  params: {
+    location: location
+    nicName: 'jenkinsNic'
+    subnetId: vnetModule.outputs.subnet1Id
+    publicIpId: jenkinsPip.outputs.publicIpId
+    nsgId: jenkinsNsg.outputs.nsgId
   }
-  dependsOn: [
-    nsg_jenkins
-    vnet
-  ]
 }
 
-resource prometheusNic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: prometheusVmName
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: M_subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: prometheusPip.id
-          }
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: prometheusNsgRef
-    }
+module prometheusNic 'modules/networking/networkInterfaceCard.bicep' = {
+  name: 'prometheusNicDeployment'
+  params: {
+    location: location
+    nicName: 'prometheusNic'
+    subnetId: vnetModule.outputs.subnet2Id
+    publicIpId: prometheusPip.outputs.publicIpId
+    nsgId: prometheusNsg.outputs.nsgId
   }
-  dependsOn: [
-    nsg_prometheus
-    vnet
-  ]
 }
 
-resource grafanaNic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
-  name: grafanaVmName
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: M_subnetRef
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: grafanaPip.id
-          }
-        }
-      }
-    ]
-    networkSecurityGroup: {
-      id: grafanaNsgRef
-    }
+module grafanaNic 'modules/networking/networkInterfaceCard.bicep' = {
+  name: 'grafanaNicDeployment'
+  params: {
+    location: location
+    nicName: 'grafanaNic'
+    subnetId: vnetModule.outputs.subnet2Id
+    publicIpId: grafanaPip.outputs.publicIpId
+    nsgId: grafanaNsg.outputs.nsgId
   }
-  dependsOn: [
-    nsg_grafana
-    vnet
-  ]
 }
 
 // #############################################################################
 // PUBLIC IP ADDRESSES
 // #############################################################################
 
-resource jenkinsPip 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-  name: jenkinsPublicIpName
-  location: location
-  properties: {
-    publicIPAllocationMethod: publicIpType
-  }
-  sku: {
-    name: publicIpSku
-  }
-}
-
-resource prometheusPip 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-  name: prometheusPublicIpName
-  location: location
-  properties: {
-    publicIPAllocationMethod: publicIpType
-  }
-  sku: {
-    name: publicIpSku
+module jenkinsPip 'modules/networking/publicIpAddress.bicep' = {
+  name: 'jenkinsPipDeployment'
+  params: {
+    location: location
+    publicIpName: 'jenkinsPublicIp'
+    publicIpType: 'Dynamic'
+    publicIpSku: 'Basic'
   }
 }
 
-resource grafanaPip 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
-  name: grafanaPublicIpName
-  location: location
-  properties: {
-    publicIPAllocationMethod: publicIpType
+module prometheusPip 'modules/networking/publicIpAddress.bicep' = {
+  name: 'prometheusPipDeployment'
+  params: {
+    location: location
+    publicIpName: 'prometheusPublicIp'
+    publicIpType: 'Dynamic'
+    publicIpSku: 'Basic'
   }
-  sku: {
-    name: publicIpSku
+}
+
+module grafanaPip 'modules/networking/publicIpAddress.bicep' = {
+  name: 'grafanaPipDeployment'
+  params: {
+    location: location
+    publicIpName: 'grafanaPublicIp'
+    publicIpType: 'Dynamic'
+    publicIpSku: 'Basic'
   }
 }
 
@@ -233,101 +139,41 @@ resource grafanaPip 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
 // VIRTUAL MACHINES
 // #############################################################################
 
-resource jenkinsVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: jenkinsVmName
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
-    }
-    osProfile: {
-      computerName: jenkins_computer
-      adminPassword: adminPassword
-      adminUsername: adminLogin
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: jenkinsNic.id
-        }
-      ]
-    }
+module jenkinsVm 'modules/compute/virtualMachine.bicep' = {
+  name: 'jenkinsVmDeployment'
+  params: {
+    location: location
+    vmName: 'jenkinsVm'
+    vmSize: 'Standard_D2s_v3'
+    adminLogin: adminLogin
+    adminPassword: adminPassword
+    computerName: 'jenkins-computer'
+    nicId: jenkinsNic.outputs.nicId
   }
 }
 
-resource prometheusVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: prometheusVmName
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
-    }
-    osProfile: {
-      computerName: prometheus_computer
-      adminPassword: adminPassword
-      adminUsername: adminLogin
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: prometheusNic.id
-        }
-      ]
-    }
+module prometheusVm 'modules/compute/virtualMachine.bicep' = {
+  name: 'prometheusVmDeployment'
+  params: {
+    location: location
+    vmName: 'prometheusVm'
+    vmSize: 'Standard_D2s_v3'
+    adminLogin: adminLogin
+    adminPassword: adminPassword
+    computerName: 'prometheus-computer'
+    nicId: prometheusNic.outputs.nicId
   }
 }
 
-resource grafanaVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
-  name: grafanaVmName
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: 'Standard_D2s_v3'
-    }
-    osProfile: {
-      computerName: grafana_computer
-      adminPassword: adminPassword
-      adminUsername: adminLogin
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'Canonical'
-        offer: 'UbuntuServer'
-        sku: '18.04-LTS'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: grafanaNic.id
-        }
-      ]
-    }
+module grafanaVm 'modules/compute/virtualMachine.bicep' = {
+  name: 'grafanaVmDeployment'
+  params: {
+    location: location
+    vmName: 'grafanaVm'
+    vmSize: 'Standard_D2s_v3'
+    adminLogin: adminLogin
+    adminPassword: adminPassword
+    computerName: 'grafana-computer'
+    nicId: grafanaNic.outputs.nicId
   }
 }

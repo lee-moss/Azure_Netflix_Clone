@@ -1,33 +1,9 @@
 using 'main.bicep'
 
-// Network parameters
-param virtualNetworkName         = 'Netflix_Vnet'
-param jenkins_nsg                = 'nsg1'
-param prometheus_nsg             = 'nsg2'
-param grafana_nsg                = 'nsg3'
-param jenkinsSubnet              = 'subnet1'
-param monitoringSubnet           = 'subnet2'
-param jenkins_computer           = 'jkc'
-param prometheus_computer        = 'prc'
-param grafana_computer           = 'grc'
+param location      = 'uksouth'
 
-
-param location                   = 'uksouth'
-
-param adminLogin                 = 'LAM5'
-param adminPassword              = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
-
-// Public IP parameters
-param jenkinsPublicIpName        = 'jenkinsPublicIp'
-param prometheusPublicIpName     = 'prometheusPublicIp'
-param grafanaPublicIpName        = 'grafanaPublicIp'
-param publicIpType               = 'Static'
-param publicIpSku                = 'Basic'
-
-// VM names and NIC names
-param jenkinsVmName              = 'jenkinsVm'
-param prometheusVmName           = 'prometheusVm'
-param grafanaVmName              = 'grafanaVm'
+param adminLogin    = 'LAM5'
+param adminPassword = az.getSecret('488dbdc5-85c6-402d-811f-eb47d17f391f', 'NetflixProject','NetflixSecret', 'adminPassword')
 
 // Network security group rules
 param jenkins_NsgRules = [
