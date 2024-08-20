@@ -11,6 +11,7 @@ param adminPassword string
 // VIRTUAL NETWORK
 // #############################################################################
 
+<<<<<<< HEAD
 module vnetModule 'modules/networking/vnet.bicep' = {
   name: 'vnetDeployment'
   params: {
@@ -20,6 +21,31 @@ module vnetModule 'modules/networking/vnet.bicep' = {
     subnet1Prefix: '10.0.1.0/24'
     subnet2Name: 'monitoringSubnet'
     subnet2Prefix: '10.0.2.0/24'
+=======
+resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
+  name: virtualNetworkName
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.0.0.0/16'
+      ]
+    }
+    subnets: [
+      {
+        name: jenkinsSubnet
+        properties: {
+          addressPrefix: '10.0.1.0/24'
+        }
+      }
+      {
+        name: monitoringSubnet
+        properties: {
+          addressPrefix: '10.0.2.0/24'
+        }
+      }
+    ]
+>>>>>>> e5502cc5ceca0a545edb39e68df566064f096283
   }
 }
 
