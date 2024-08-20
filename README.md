@@ -1,5 +1,7 @@
 # Netflix Clone Deployment with Azure, Bicep, Jenkins, Docker, and Kubernetes
 
+THIS IS AN ONGOING PROJECT AND WILL BE UPDATED FREQUENTLY
+
 ## Table of Contents
 1. [Overview](#overview)
 2. [Key Technologies and Tools](#key-technologies-and-tools)
